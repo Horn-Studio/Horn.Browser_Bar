@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能侧边栏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.5s ease;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 350px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .background-graphic {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+            background: 
+                radial-gradient(circle at 20% 30%, #ff9a9e, transparent 25%),
+                radial-gradient(circle at 80% 70%, #fad0c4, transparent 30%),
+                radial-gradient(circle at 40% 80%, #a1c4fd, transparent 20%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: #4dabf7;
+            animation: pulse 2s infinite;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 600;
+            background: linear-gradient(to right, #4dabf7, #3bc9db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 50px;
+            height: 26px;
+            border-radius: 50px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .toggle-circle {
+            width: 20px;
+            height: 20px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            position: absolute;
+            left: 3px;
+            transition: transform 0.3s ease;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .search-box:hover, .search-box:focus-within {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .search-box i {
+            margin-right: 10px;
+            color: #adb5bd;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 100%;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .search-box input::placeholder {
+            color: #adb5bd;
+        }
+
+        .section-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #74c0fc;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #4dabf7, #3bc9db);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .card-content h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        .music-player {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .control-btn.play-pause {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4dabf7, #3bc9db);
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(to right, #4dabf7, #3bc9db);
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #adb5bd;
+            margin-top: 5px;
+        }
+
+        .file-input-container {
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .file-input-label {
+            display: block;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .file-input-label:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .tools-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+        }
+
+        .tool-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+        .tool-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4dabf7;
+        }
+
+        .tool-title {
+            font-size: 13px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4dabf7;
+            cursor: pointer;
+        }
+
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .now-playing {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+            color: #74c0fc;
+            height: 20px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px 0 15px;
+            color: #adb5bd;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        /* 浅色主题 */
+        body.light-theme {
+            background: linear-gradient(135deg, #f5f7fa, #e4e5f1);
+            color: #333;
+        }
+
+        body.light-theme .search-box {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .search-box:hover,
+        body.light-theme .search-box:focus-within {
+            background: white;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .search-box input {
+            color: #333;
+        }
+
+        body.light-theme .section-title {
+            color: #339af0;
+        }
+
+        body.light-theme .card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+
+        body.light-theme .card:hover {
+            background: white;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-theme .music-player {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .file-input-label {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+
+        body.light-theme .tool-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme footer {
+            color: #666;
+        }
+
+        body.light-theme .theme-toggle {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* 主题切换动画 */
+        .theme-toggle.light .toggle-circle {
+            transform: translateX(24px);
+        }
+        
+        /* 滚动条样式 */
+        body {
+            scrollbar-width: thin;
+            scrollbar-color: #4dabf7 rgba(255, 255, 255, 0.1);
+        }
+        
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        body::-webkit-scrollbar-thumb {
+            background: #4dabf7;
+            border-radius: 4px;
+        }
+        
+        body.light-theme::-webkit-scrollbar-thumb {
+            background: #339af0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-graphic"></div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-sliders-h"></i>
+                <h1>欢迎来到Horn.Browser Bar</h1>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <div class="toggle-circle"></div>
+            </button>
+        </header>
+        
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="必应搜索...">
+        </div>
+        
+        <div class="section-title">
+            <i class="fas fa-rocket"></i>
+            <h2>快速访问</h2>
+        </div>
+        
+             <!-- 百度 -->
+      <div class="card" id="baiduCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #2932e1, #3b44e6);">
+          <i class="fab fa-baidu"></i>
+        </div>
+        <div class="card-content">
+          <h3>百度</h3>
+        </div>
+      </div>
+      
+      <!-- 必应 -->
+      <div class="card" id="bingCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #008373, #00A372);">
+          <i class="fab fa-microsoft"></i>
+        </div>
+        <div class="card-content">
+          <h3>必应搜索</h3>
+        </div>
+      </div>
+      
+      <!-- 知乎 -->
+      <div class="card" id="zhihuCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #0084ff, #00a0ff);">
+          <i class="fab fa-zhihu"></i>
+        </div>
+        <div class="card-content">
+          <h3>知乎</h3>
+        </div>
+      </div>
+      
+      <!-- CSDN -->
+      <div class="card" id="csdnCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #ff6a00, #ff4900);">
+          <i class="fas fa-code"></i>
+        </div>
+        <div class="card-content">
+          <h3>CSDN</h3>
+        </div>
+      </div>
+      
+      <!-- GitHub -->
+      <div class="card" id="githubCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #333, #000);">
+          <i class="fab fa-github"></i>
+        </div>
+        <div class="card-content">
+          <h3>GitHub</h3>
+        </div>
+      </div>
+      
+      <!-- DeepSeek -->
+      <div class="card" id="deepseekCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #1a73e8, #4285f4);">
+          <i class="fas fa-brain"></i>
+        </div>
+        <div class="card-content">
+          <h3>DeepSeek</h3>
+        </div>
+      </div>
+      
+      <!-- 哔哩哔哩 -->
+      <div class="card" id="bilibiliCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #fb7299, #ff85a0);">
+          <i class="fas fa-tv"></i>
+        </div>
+        <div class="card-content">
+          <h3>哔哩哔哩</h3>
+        </div>
+      </div>
+      
+      <!-- 微信文件传输助手 -->
+      <div class="card" id="weixinCard">
+        <div class="card-icon" style="background: linear-gradient(135deg, #09bb07, #07a505);">
+          <i class="fab fa-weixin"></i>
+        </div>
+        <div class="card-content">
+          <h3>微信文件传输</h3>
+        </div>
+      </div>
+
+        
+        <div class="section-title">
+       
+        </div>
+        <div class="music-player">
+            <div class="player-header">
+                <h3>本地音乐</h3>
+                <div class="control-btn" id="playlistBtn">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
+            
+            <div class="now-playing" id="nowPlaying">
+                选择音频文件开始播放
+            </div>
+            
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button class="control-btn play-pause" id="playBtn">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="control-btn" id="nextBtn">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="progress-info">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+            
+            <div class="volume-container">
+                <i class="fas fa-volume-up"></i>
+                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
+            </div>
+            
+            <div class="file-input-container">
+                <label for="fileInput" class="file-input-label">
+                    <i class="fas fa-folder-open"></i> 选择音频文件
+                </label>
+                <input type="file" id="fileInput" accept="audio/*" multiple>
+            </div>
+        </div>
+        
+        <div class="section-title">
+
+        </div>
+        
+        <footer>
+            <p>为号角浏览器开发 Developed By Horn.Studio</p>
+        </footer>
+    </div>
+
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            themeToggle.classList.toggle('light');
+            
+            // 保存主题偏好
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        });
+        
+        // 检查保存的主题
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggle.classList.add('light');
+        }
+        
+        // 快速访问卡片点击事件
+        document.getElementById('deepseekCard').addEventListener('click', () => {
+      window.open('https://www.deepseek.com', '_blank');
+    });
+    
+    document.getElementById('bingCard').addEventListener('click', () => {
+      window.open('https://www.bing.com', '_blank');
+    });
+    
+    document.getElementById('baiduCard').addEventListener('click', () => {
+      window.open('https://www.baidu.com', '_blank');
+    });
+    
+    document.getElementById('zhihuCard').addEventListener('click', () => {
+      window.open('https://www.zhihu.com', '_blank');
+    });
+    
+    document.getElementById('csdnCard').addEventListener('click', () => {
+      window.open('https://www.csdn.net', '_blank');
+    });
+    
+    document.getElementById('githubCard').addEventListener('click', () => {
+      window.open('https://github.com', '_blank');
+    });
+    
+    document.getElementById('bilibiliCard').addEventListener('click', () => {
+      window.open('https://www.bilibili.com', '_blank');
+    });
+    
+    document.getElementById('weixinCard').addEventListener('click', () => {
+      window.open('https://filehelper.weixin.qq.com', '_blank');
+    });
+
+        
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim();
+                if (query) {
+                    window.open(`https://www.bing.com/search?q=${encodeURIComponent(query)}`, '_blank');
+                    searchInput.value = '';
+                }
+            }
+        });
+        
+        // 音乐播放器功能
+        const audio = new Audio();
+        let currentTrack = 0;
+        let tracks = [];
+        
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const nowPlaying = document.getElementById('nowPlaying');
+        const fileInput = document.getElementById('fileInput');
+        
+        // 播放/暂停功能
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                if (tracks.length === 0) return;
+                audio.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                audio.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+        
+        // 上一曲
+        prevBtn.addEventListener('click', () => {
+            if (tracks.length === 0) return;
+            currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
+            loadTrack(currentTrack);
+            audio.play();
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+        
+        // 下一曲
+        nextBtn.addEventListener('click', () => {
+            if (tracks.length === 0) return;
+            currentTrack = (currentTrack + 1) % tracks.length;
+            loadTrack(currentTrack);
+            audio.play();
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+        
+        // 加载曲目
+        function loadTrack(index) {
+            if (tracks.length === 0) return;
+            
+            const file = tracks[index];
+            const objectUrl = URL.createObjectURL(file);
+            audio.src = objectUrl;
+            nowPlaying.textContent = file.name.replace(/\.[^/.]+$/, ""); // 移除扩展名
+        }
+        
+        // 进度条更新
+        audio.addEventListener('timeupdate', () => {
+            const { currentTime, duration } = audio;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            
+            // 更新时间显示
+            currentTimeEl.textContent = formatTime(currentTime);
+            durationEl.textContent = formatTime(duration);
+        });
+        
+        // 点击进度条跳转
+        progressContainer.addEventListener('click', (e) => {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            
+            audio.currentTime = (clickX / width) * duration;
+        });
+        
+        // 音量控制
+        volumeSlider.addEventListener('input', () => {
+            audio.volume = volumeSlider.value / 100;
+        });
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            // 过滤非音频文件
+            tracks = files.filter(file => file.type.startsWith('audio/'));
+            if (tracks.length === 0) {
+                nowPlaying.textContent = "未找到音频文件";
+                return;
+            }
+            
+            currentTrack = 0;
+            loadTrack(currentTrack);
+            nowPlaying.textContent = tracks[0].name.replace(/\.[^/.]+$/, "");
+        });
+        
+        // 歌曲结束时自动播放下一首
+        audio.addEventListener('ended', () => {
+            nextBtn.click();
+        });
+        
+
+    </script>
+</body>
+</html>
