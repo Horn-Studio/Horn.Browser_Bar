@@ -383,14 +383,13 @@
     <div class="container">
         <div class="sidebar">
             <div class="logo">
-                <i class="fas fa-compass logo-icon"></i>
-                <div class="logo-text">多功能侧边栏</div>
+
+
             </div>
 
             <!-- 时间组件 -->
             <div class="section">
                 <div class="section-title">
-                    <i class="fas fa-clock"></i>时间与日期
                 </div>
                 <div class="clock-container">
                     <div class="time" id="current-time">00:00:00</div>
@@ -538,25 +537,843 @@
                 </div>
                 <div class="notes-container">
                     <textarea id="notes" placeholder="输入您的笔记..."></textarea>
-                    <button class="notes-btn" id="save-notes">保存笔记</button>
+
                 </div>
             </div>
 
-            <!-- 主题切换 -->
-            <button class="theme-toggle" id="theme-toggle">
-                <i class="fas fa-moon"></i>切换到深色模式
-            </button>
-        </div>
 
-        <div class="main-content">
-            <h1>多功能浏览器侧边栏</h1>
-            <p>这是一个功能丰富的侧边栏，包含时间、音乐播放器、计算器、汇率转换、天气和记事本功能</p>
-            <div style="margin-top: 30px;">
-                <i class="fas fa-arrow-left" style="font-size: 48px; color: var(--primary-color);"></i>
-                <p style="margin-top: 15px;">侧边栏已加载所有功能组件</p>
+
+     
+
+    <script>
+        // 更新时间和日期
+        function updateTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('current-time');
+            const dateElement = document.getElementById('current-date');
+            
+            // 格式化时间
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // 格式化日期
+            const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const dayName = days[now.getDay()];
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            dateElement.textContent = `${year}年${month}月${day}日 ${dayName}`;
+        }
+        
+        // 初始化和更新时间
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // 音乐播放器功能
+        const audio = new Audio();
+        let isPlaying = false;
+        const playBtn = document.getElementById('play-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progress = document.getElementById('music-progress');
+        const fileInput = document.getElementById('music-file');
+        const currentSong = document.getElementById('current-song');
+        
+        // 播放/暂停按钮
+        playBtn.addEventListener('click', () => {
+            if (audio.src) {
+                if (isPlaying) {
+                    audio.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                } else {
+                    audio.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                isPlaying = !isPlaying;
+            }
+        });
+        
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                audio.src = fileURL;
+                currentSong.textContent = file.name;
+                audio.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                isPlaying = true;
+            }
+        });
+        
+        // 更新进度条
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progress.style.width = `${percent}%`;
+        });
+        
+        // 点击进度条跳转
+        progress.parentElement.addEventListener('click', (e) => {
+            const width = progress.parentElement.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        });
+        
+        // 计算器功能
+        let currentInput = '0';
+        let prevInput = '0';
+        let operation = null;
+        let shouldResetScreen = false;
+        const display = document.getElementById('calc-display');
+        const sciDisplay = document.getElementById('sci-display');
+        
+        // 简易计算器按钮事件
+        document.querySelectorAll('#basic-calculator .calc-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                handleButtonPress(button.dataset.value, display);
+            });
+        });
+        
+        // 科学计算器按钮事件
+        document.querySelectorAll('#scientific-calculator .calc-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                handleButtonPress(button.dataset.value, sciDisplay);
+            });
+        });
+        
+        function handleButtonPress(value, displayElement) {
+            if (value === 'C') {
+                // 清除
+                currentInput = '0';
+                prevInput = '0';
+                operation = null;
+                displayElement.textContent = currentInput;
+            } else if (value === '±') {
+                // 正负号
+                currentInput = String(-parseFloat(currentInput));
+                displayElement.textContent = currentInput;
+            } else if (value === '%') {
+                // 百分比
+                currentInput = String(parseFloat(currentInput) / 100);
+                displayElement.textContent = currentInput;
+            } else if (value === '=') {
+                // 等于
+                if (operation) {
+                    calculate(displayElement);
+                    operation = null;
+                }
+            } else if (['+', '-', '*', '/'].includes(value)) {
+                // 运算符
+                if (operation !== null) calculate(displayElement);
+                prevInput = currentInput;
+                operation = value;
+                shouldResetScreen = true;
+            } else if (['sin', 'cos', 'tan', 'π'].includes(value)) {
+                // 科学函数
+                if (value === 'sin') {
+                    currentInput = String(Math.sin(parseFloat(currentInput)));
+                } else if (value === 'cos') {
+                    currentInput = String(Math.cos(parseFloat(currentInput)));
+                } else if (value === 'tan') {
+                    currentInput = String(Math.tan(parseFloat(currentInput)));
+                } else if (value === 'π') {
+                    currentInput = String(Math.PI);
+                }
+                displayElement.textContent = currentInput;
+            } else {
+                // 数字和小数点
+                if (currentInput === '0' || shouldResetScreen) {
+                    currentInput = value;
+                    shouldResetScreen = false;
+                } else {
+                    currentInput += value;
+                }
+                displayElement.textContent = currentInput;
+            }
+        }
+        
+        function calculate(displayElement) {
+            let result;
+            const prev = parseFloat(prevInput);
+            const current = parseFloat(currentInput);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+            
+            currentInput = String(result);
+            displayElement.textContent = currentInput;
+        }
+        
+        // 计算器选项卡切换
+        document.querySelectorAll('.calc-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 移除所有活动标签
+                document.querySelectorAll('.calc-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有内容
+                document.querySelectorAll('.calc-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // 激活当前标签
+                tab.classList.add('active');
+                
+                // 显示对应内容
+                const tabId = tab.dataset.tab;
+                document.getElementById(`${tabId}-calculator`).classList.remove('hidden');
+            });
+        });
+        
+        // 汇率转换功能
+        const exchangeRates = {
+            "USD": 1,
+            "CNY": 7.17,
+            "EUR": 0.856,
+            "JPY": 147.33,
+            "GBP": 0.741
+        };
+        
+        document.getElementById('convert-btn').addEventListener('click', () => {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('from-currency').value;
+            const toCurrency = document.getElementById('to-currency').value;
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('请输入有效的金额');
+                return;
+            }
+            
+            // 转换逻辑
+            const result = amount * (exchangeRates[toCurrency] / exchangeRates[fromCurrency]);
+            document.getElementById('exchange-result').textContent = 
+                `${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}`;
+        });
+        
+        // 记事本功能
+        const notesTextarea = document.getElementById('notes');
+        const saveNotesBtn = document.getElementById('save-notes');
+        
+        // 加载保存的笔记
+        function loadNotes() {
+            const savedNotes = getCookie('browserNotes');
+            if (savedNotes) {
+                notesTextarea.value = savedNotes;
+            }
+        }
+        
+        // 保存笔记
+        saveNotesBtn.addEventListener('click', () => {
+            const notes = notesTextarea.value;
+            setCookie('browserNotes', notes, 30); // 保存30天
+            alert('笔记已保存！');
+        });
+        
+        // Cookie处理函数
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+        }
+        
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+        
+        // 主题切换
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>切换到浅色模式';
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>切换到深色模式';
+            }
+        });
+        
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            loadNotes();
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能浏览器侧边栏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --bg-color: #f8f9fa;
+            --sidebar-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            --primary-color: #4895ef;
+            --secondary-color: #560bad;
+            --bg-color: #121212;
+            --sidebar-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --border-color: #333333;
+            --card-bg: #252525;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: var(--transition);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+        }
+
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .date {
+            font-size: 16px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .music-player {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .control-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary-color);
+            width: 30%;
+        }
+
+        .file-input {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .calculator-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calc-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calc-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .calc-tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 8px;
+        }
+
+        .calc-display {
+            grid-column: span 4;
+            height: 50px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 15px;
+            font-size: 24px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .calc-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .calc-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .calc-btn.operator {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        .calc-btn.equals {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .exchange-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .exchange-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .exchange-row label {
+            width: 80px;
+            font-size: 14px;
+        }
+
+        .exchange-row input, .exchange-row select {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .exchange-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .exchange-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .weather-container {
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .weather-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .notes-container textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            resize: none;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .notes-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .notes-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .theme-toggle {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: auto;
+        }
+
+        .theme-toggle i {
+            margin-right: 10px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--secondary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+
+
             </div>
-        </div>
-    </div>
+
+            <!-- 时间组件 -->
+            <div class="section">
+                <div class="section-title">
+                </div>
+                <div class="clock-container">
+                    <div class="time" id="current-time">00:00:00</div>
+                    <div class="date" id="current-date">2023年1月1日 星期一</div>
+                </div>
+            </div>
+
+            <!-- 音乐播放器 -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-music"></i>音乐播放器
+                </div>
+                <div class="music-player">
+                    <div class="now-playing">当前播放: <span id="current-song">未选择音乐</span></div>
+                    <div class="player-controls">
+                        <button class="control-btn" id="prev-btn"><i class="fas fa-step-backward"></i></button>
+                        <button class="control-btn" id="play-btn"><i class="fas fa-play"></i></button>
+                        <button class="control-btn" id="next-btn"><i class="fas fa-step-forward"></i></button>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress" id="music-progress"></div>
+                    </div>
+                    <input type="file" class="file-input" id="music-file" accept="audio/*">
+                </div>
+            </div>
+
+            <!-- 计算器 -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-calculator"></i>计算器
+                </div>
+                <div class="calculator-container">
+                    <div class="calc-tabs">
+                        <div class="calc-tab active" data-tab="basic">简易</div>
+                        <div class="calc-tab" data-tab="scientific">科学</div>
+                        <div class="calc-tab" data-tab="exchange">汇率</div>
+                    </div>
+                    
+                    <!-- 简易计算器 -->
+                    <div class="calc-content" id="basic-calculator">
+                        <div class="calculator">
+                            <div class="calc-display" id="calc-display">0</div>
+                            <div class="calc-btn" data-value="C">C</div>
+                            <div class="calc-btn" data-value="±">±</div>
+                            <div class="calc-btn" data-value="%">%</div>
+                            <div class="calc-btn operator" data-value="/">÷</div>
+                            <div class="calc-btn" data-value="7">7</div>
+                            <div class="calc-btn" data-value="8">8</div>
+                            <div class="calc-btn" data-value="9">9</div>
+                            <div class="calc-btn operator" data-value="*">×</div>
+                            <div class="calc-btn" data-value="4">4</div>
+                            <div class="calc-btn" data-value="5">5</div>
+                            <div class="calc-btn" data-value="6">6</div>
+                            <div class="calc-btn operator" data-value="-">−</div>
+                            <div class="calc-btn" data-value="1">1</div>
+                            <div class="calc-btn" data-value="2">2</div>
+                            <div class="calc-btn" data-value="3">3</div>
+                            <div class="calc-btn operator" data-value="+">+</div>
+                            <div class="calc-btn" data-value="0">0</div>
+                            <div class="calc-btn" data-value=".">.</div>
+                            <div class="calc-btn equals" data-value="=">=</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 科学计算器 -->
+                    <div class="calc-content hidden" id="scientific-calculator">
+                        <div class="calculator">
+                            <div class="calc-display" id="sci-display">0</div>
+                            <div class="calc-btn" data-value="C">C</div>
+                            <div class="calc-btn" data-value="(">(</div>
+                            <div class="calc-btn" data-value=")">)</div>
+                            <div class="calc-btn operator" data-value="/">÷</div>
+                            <div class="calc-btn" data-value="sin">sin</div>
+                            <div class="calc-btn" data-value="7">7</div>
+                            <div class="calc-btn" data-value="8">8</div>
+                            <div class="calc-btn" data-value="9">9</div>
+                            <div class="calc-btn operator" data-value="*">×</div>
+                            <div class="calc-btn" data-value="cos">cos</div>
+                            <div class="calc-btn" data-value="4">4</div>
+                            <div class="calc-btn" data-value="5">5</div>
+                            <div class="calc-btn" data-value="6">6</div>
+                            <div class="calc-btn operator" data-value="-">−</div>
+                            <div class="calc-btn" data-value="tan">tan</div>
+                            <div class="calc-btn" data-value="1">1</div>
+                            <div class="calc-btn" data-value="2">2</div>
+                            <div class="calc-btn" data-value="3">3</div>
+                            <div class="calc-btn operator" data-value="+">+</div>
+                            <div class="calc-btn" data-value="π">π</div>
+                            <div class="calc-btn" data-value="0">0</div>
+                            <div class="calc-btn" data-value=".">.</div>
+                            <div class="calc-btn equals" data-value="=">=</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 汇率计算器 -->
+                    <div class="calc-content hidden" id="exchange-calculator">
+                        <div class="exchange-container">
+                            <div class="exchange-row">
+                                <label>金额:</label>
+                                <input type="number" id="amount" value="1" min="0">
+                            </div>
+                            <div class="exchange-row">
+                                <label>从:</label>
+                                <select id="from-currency">
+                                    <option value="USD">美元 (USD)</option>
+                                    <option value="CNY">人民币 (CNY)</option>
+                                    <option value="EUR">欧元 (EUR)</option>
+                                    <option value="JPY">日元 (JPY)</option>
+                                    <option value="GBP">英镑 (GBP)</option>
+                                </select>
+                            </div>
+                            <div class="exchange-row">
+                                <label>到:</label>
+                                <select id="to-currency">
+                                    <option value="CNY">人民币 (CNY)</option>
+                                    <option value="USD">美元 (USD)</option>
+                                    <option value="EUR">欧元 (EUR)</option>
+                                    <option value="JPY">日元 (JPY)</option>
+                                    <option value="GBP">英镑 (GBP)</option>
+                                </select>
+                            </div>
+                            <button class="exchange-btn" id="convert-btn">转换</button>
+                            <div class="exchange-result" id="exchange-result" style="margin-top: 15px; text-align: center; font-size: 18px; font-weight: 600;">
+                                1 USD = 7.17 CNY
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 天气组件 -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-cloud-sun"></i>天气预报
+                </div>
+                <div class="weather-container">
+                    <iframe class="weather-iframe" src="https://tianqi.qq.com/" frameborder="0"></iframe>
+                </div>
+            </div>
+
+            <!-- 记事本 -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-sticky-note"></i>记事本
+                </div>
+                <div class="notes-container">
+                    <textarea id="notes" placeholder="输入您的笔记..."></textarea>
+
+                </div>
+            </div>
+
+
+
+     
 
     <script>
         // 更新时间和日期
